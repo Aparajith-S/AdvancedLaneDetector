@@ -1,4 +1,7 @@
 ## Advanced Lane Finding
+Author:  Aparajith Sridharan(s.aparajith@live.com)  
+date: 26/12/2020
+
 [![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 ![Lanes Image](./examples/example_output.jpg)
 
@@ -75,6 +78,17 @@ Thus, providing absent lane details in the S-channel farther away from the Ego v
 S-channel|Sobel-xy magnitude | Fusioned output  
 :-------------:|:-------------: | :---------------:  
 ![distorted](output_images/S_Channel_binary.jpg)|![distorted](output_images/SobelXYMag_Binary.jpg) | ![distorted](output_images/Fusion_binary.jpg)
+
+### Distortion correction and Perspective transform
+The following steps were done:
+- undistort the binarized image with the previously calculated camera matrix and distortion coefficients. 
+- perform a perspective transform. Below illustration shows the output of a straight line lanes, turning lanes. 
+
+Distortion corrected image  (with ROI for illustration) | Perspective transform  
+:-------------:|:-------------:   
+![pers1](output_images/BinaryUndistorted1.jpg)|![pers2](output_images/PerspectiveCorrected1.jpg)
+![pers3](output_images/BinaryUndistortedturn.jpg)|![pers4](output_images/PerspectiveCorrectedturn.jpg)
+
 
 
 To help the reviewer examine your work, please save examples of the output from each stage of your pipeline in the folder called `output_images`, and include a description in your writeup for the project of what each image shows.    The video called `project_video.mp4` is the video your pipeline should work well on.  
