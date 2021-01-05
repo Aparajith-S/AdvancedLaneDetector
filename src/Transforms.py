@@ -7,15 +7,12 @@ def transform_Perspective(img, points):
     # feed the points with order
     (bl, br, tr, tl) = points
     rect = np.array([tl, tr, br, bl], dtype = "float32")
-    print(points)
     # compute the width of the new image, which will be the
     # maximum distance between bottom-right and bottom-left
     # x-coordinates or the top-right and top-left x-coordinates
     maxWidth = img.shape[1]
-    print(maxWidth)
     # compute the height of the new image
     maxHeight = img.shape[0]
-    print(maxHeight)
     # now that we have the dimensions of the new image, construct
     # the set of destination points to obtain a "birds eye view",
     # (i.e. top-down view) of the image, again specifying points
@@ -69,10 +66,10 @@ def fusionImage(img):
     # Split S
     S = hsl[:, :, 2]
     # make binary of RGB image using sobel X-Y gradient
-    sobel_bin = mag_thresh(img, (150, 200))
+    sobel_bin = mag_thresh(img, (120, 200))
     # make binary of fusion of S channel of HLS image with Magnitude of sobel XY
     S_bin = np.zeros_like(S)
-    S_bin[(S >= 150) | (sobel_bin >= 150)] = 255
+    S_bin[((S >= 130) & (S < 255)) | ((sobel_bin >= 130) & (sobel_bin < 255))] = 255
     return S_bin
 
 
@@ -111,6 +108,7 @@ def TransformationPipeline(img):
                     dtype=np.int32)
     blended = drawPoly(processedImg, poly)
     warped = transform_Perspective(processedImg, poly)
+    warped = cv2.cvtColor(warped,cv2.COLOR_RGB2GRAY)
     return blended, warped
 
 

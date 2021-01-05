@@ -79,7 +79,7 @@ S-channel|Sobel-xy magnitude | Fusioned output
 :-------------:|:-------------: | :---------------:  
 ![distorted](output_images/S_Channel_binary.jpg)|![distorted](output_images/SobelXYMag_Binary.jpg) | ![distorted](output_images/Fusion_binary.jpg)
 
-### Distortion correction and Perspective transform
+### Point 3: Distortion correction and Perspective transform
 The following steps were done:
 - undistort the binarized image with the previously calculated camera matrix and distortion coefficients. 
 - perform a perspective transform. Below illustration shows the output of a straight line lanes, turning lanes. 
@@ -89,11 +89,30 @@ Distortion corrected image  (with ROI for illustration) | Perspective transform
 ![pers1](output_images/BinaryUndistorted1.jpg)|![pers2](output_images/PerspectiveCorrected1.jpg)
 ![pers3](output_images/BinaryUndistortedturn.jpg)|![pers4](output_images/PerspectiveCorrectedturn.jpg)
 
+### Point 4: Lane scanning using windowing method and Polynomial fitting
+The steps that are carried after perspective transform is to calculate curvature using two methods.
+- first for an initial run to find the lane lines, a polynomial fitting is done by using teh histogram and scanning the likelihood of lanes in the histogram
+- to improve on performance, the initially found left and right lane polynomial coefficients would be used as a ballpark to find successive lanes when a video is run frame by frame to detect lanes.  
 
+input image | perspective transformed image    
+:-------------:|:-------------:
+![pers1](output_images/test4input.jpg)|![pers2](output_images/test4output.jpg)
 
-To help the reviewer examine your work, please save examples of the output from each stage of your pipeline in the folder called `output_images`, and include a description in your writeup for the project of what each image shows.    The video called `project_video.mp4` is the video your pipeline should work well on.  
+polynomial fitting using sliding window| Polynomial fitting using fast scanning with known polynomial  
+:-------------:|:-------------:
+![pers2](output_images/test4polynomfit.png)|![pers2](output_images/test4fpolyfit.png)
 
-The `challenge_video.mp4` video is an extra (and optional) challenge for you if you want to test your pipeline under somewhat trickier conditions.  The `harder_challenge.mp4` video is another optional challenge and is brutal!
+- the pipeline is developed in a way so that the scaling of the radius of curvature is done on the polynomial equation  
 
-If you're feeling ambitious (again, totally optional though), don't stop there!  We encourage you to go out and take video of your own, calibrate your camera and show us how you would implement this project from scratch!
+      x = A(y^2) + By + C 
+
+- substituting for Xr = (1/M_x)*Xpixels and Yr = (1/M_y )*Ypixels  
+
+   
+      Xr = (M_x/(M_y^2))*A*Yr + (M_x/M_y)*B*Yr + C  
+where, M_x and M_y are meters per pixels scaling factors and Xr, Yr are the real world X and Y coordinates. 
+
+- the factors M_x is taken to be as 3.7 / 600 as seen in the polynomial fitting, the lanes in x direction is around 600 px apart
+    M_y is retained at 30 / 720 as it is 720 px long.
+- with this setup, curve radius of 529.55 m and 218.85 m were computed. It is obvious from the image as the curve on the right is sharper than on the left. So, the right hand curve has a much smaller radius.     
 
