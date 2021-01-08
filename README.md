@@ -2,8 +2,7 @@
 Author:  Aparajith Sridharan(s.aparajith@live.com)  
 date: 26/12/2020
 
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
-![Lanes Image](./examples/example_output.jpg)
+![Lanes Image](./output_images/result.gif)
 
 In this project, the goal is to write a software pipeline to identify the lane boundaries in a video. 
 This README takes the reader through the steps used to develop this project.  
