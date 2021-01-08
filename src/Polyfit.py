@@ -1,3 +1,8 @@
+# @file Polyfit.py
+# @brief methods to find polynomials from lanes and reliably fit the polynomials.
+# @author Aparajith Sridharan
+#         s.aparajith@live.com
+# @date 30.12.2020
 from Transforms import TransformationPipeline
 import cv2
 import numpy as np
@@ -26,7 +31,7 @@ class Line():
         # difference in fit coefficients between last and new fits
         self.diffs = np.array([0,0,0], dtype='float')
         # Max cycles for smoothing filter
-        self.Max_N = 20
+        self.Max_N = 30
 
     #@brief computes the smoothing value (moving average)
     def smooth(self):
@@ -70,7 +75,7 @@ def find_lane_pixels(binary_warped):
 
     # HYPERPARAMETERS
     # Choose the number of sliding windows
-    nwindows = 9
+    nwindows = 15
     # Set the width of the windows +/- margin
     margin = 100
     # Set minimum number of pixels found to recenter window
@@ -304,6 +309,13 @@ def finalPipeline(img, left=Line(), right=Line(),once=0):
     Minv, blended, warped = TransformationPipeline(img)
     lfit, rfit, fitmiss, ploty, once=\
         fitPolynomialWithPerformance(warped,left.best_fit,right.best_fit,once)
+    # check if the left and right polynomials has any roots together they aren-t parallel!
+    r = np.roots(lfit - rfit)
+    # take conjugates to find magnitude because roots can be complex
+    # check if those roots lie within the frame then deplete performance,
+    if((np.sqrt(r[0]*np.conjugate(r[0]))<img.shape[1])
+        and (np.sqrt(r[1]*np.conjugate(r[1]))<img.shape[0])):
+        fitmiss=1
     if not fitmiss:
         left.add(lfit)
         right.add(rfit)
@@ -317,8 +329,6 @@ def finalPipeline(img, left=Line(), right=Line(),once=0):
         left.detected = False
         right.detected = False
         once=0
-        left.resetFilter()
-        right.resetFilter()
     return Minv, left, right,ploty, once, warped
 
 

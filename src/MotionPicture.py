@@ -1,26 +1,34 @@
+# @file MotionPicture.py
+# @brief methods to open video and display the detected lane
+# @author Aparajith Sridharan
+#         s.aparajith@live.com
+# @date 2.1.2021
 import cv2
 import LaneDetector
 import numpy as np
-#cap = cv2.VideoCapture("../challenge_video.mp4")
-cap = cv2.VideoCapture("../project_video.mp4")
-out = cv2.VideoWriter("../output_video.mp4", cv2.VideoWriter_fourcc(*'DIVX'), 25, (1280,720))
+#turn this on to enable writing to file
+writer_enable = 0
+filename = "../project_video.mp4"
+#filename = "../challenge_video.mp4"
+cap = cv2.VideoCapture(filename)
+if writer_enable == 1:
+    out = cv2.VideoWriter("../output_"+filename.split('/')[1].split('.')[0]+".mp4", cv2.VideoWriter_fourcc(*'DIVX'), 25, (1280,720))
 while not cap.isOpened():
-    cap = cv2.VideoCapture("../project_video.mp4")
+    cap = cv2.VideoCapture(filename)
     cv2.waitKey(1000)
     print("Wait for the header")
 
 pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
 print(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-failcounter=0
-old_pos_frame=0
+failcounter = 0
+old_pos_frame  = 0
 obj = LaneDetector.LaneFinder()
 while True:
     flag, frame = cap.read()
     if flag:
         # The frame is ready and already captured
-        # cv2.imshow('video', frame)
         pos_frame = cap.get(cv2.CAP_PROP_POS_FRAMES)
-        print(str(pos_frame)+" frames")
+        #print(str(pos_frame)+" frames")
         if(old_pos_frame != pos_frame):
             failcounter=0
         result = obj.iterate(frame)
@@ -28,7 +36,6 @@ while True:
         Lx=int(obj.left.bestx[-1])
         Rx=int(obj.right.bestx[-1])
         EgoPos='right'
-        print(x_midpoint)
         EgoPosVal = ((x_midpoint-Lx) + (x_midpoint-Rx))
         EgoPos = str(round(np.absolute(EgoPosVal * 3.7 / 910), 2))
         perf=['Low','High']
@@ -43,7 +50,8 @@ while True:
         cv2.putText(result, str_cur, (50, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0,255,255), 2)
         cv2.putText(result, str("Ego vehicle is ")+EgoPos, (50, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,0,0), 2)
         cv2.imshow('processed', result)
-        out.write(result)
+        if writer_enable==1:
+            out.write(result)
     else:
         failcounter+=1
         # The next frame is not ready, so we try to read it again
@@ -61,5 +69,6 @@ while True:
         # If the number of captured frames is equal to the total number of frames,
         # we stop
         break
-out.release()
+if writer_enable==1:
+    out.release()
 cv2.destroyAllWindows()

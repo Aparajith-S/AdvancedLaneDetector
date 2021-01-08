@@ -186,20 +186,70 @@ if midpointX-Lx is greater than Rx-midpointX then it means the camera has moved 
 
 Using this information, the position of the Ego vehicle in meters can be approximately computed with the same scaling formula used before.
 
-### Drawbacks and Additional methods used to make this work for the challenge videos
+### Point 8 : Intersecting Polynomial Problem
+there were situations where the scaled image will result in the polynomials being intersecting. This means that the detection somewhere has gone bad and these polynomials should be ignored.
+the following was done to identify the issue.  
+- find the difference between polynomial coefficients.    
+- find the roots of the difference polynomial.  
+- find the roots if they exist within the bottom and right frame. basically to check if they intersect within the image area. this should not happen as the polynomials should be parallel(ideal) or meeting far away outside the frame (okay-ish)
+
+if the polynomial intersects, fitmiss is raised. the filter does not add the defective ill formed polynomials and the image shows no difference. it also triggers the next cycle to lower performance by using the sliding window to try and recover from the misfit.    
+
+## Drawbacks and Additional methods used to make this work for the challenge videos
 
 The challenge videos are harder mainly because of the following reasons:
-- uneven road surface material on the right and the left halves. (color spaces, sobel operations and so on will not yeild results if the image has poor brightness and contrast)
-- varying brightness and poor contrast at certain frames owing to shadows and vision bleaching(going under bridges). 
-- erratic road curvatures
+- uneven road surface material on the right and the left halves. (color spaces, sobel operations and so on will not yield results if the image has poor brightness and contrast)
+- varying brightness and poor contrast at certain frames owing to shadow and vision bleaching(going under bridges/into tunnels and out)  
+- new lane markings (like a diamond warning sign on the middle of the lane (yeah, looks like it is an American sign stuff on the roads to alert drivers, this could pose a problem.)   
+- severe road curvatures(extreme challenge)
 
-#### Auto Contrasting 
+### Auto Contrasting 
 to try and tackle the points, the image was put through auto contrasting with the help of CLAHE.  
 CLAHE stands for Contrast limited Adaptive Histogram equalization. each pixel is transformed based on the histogram of the surrounding pixels and works quite well for poorly contrasted images.  
 this is implemented in the `clahe(...)` function in `Transforms.py`
 
-#### Auto alpha and beta calculations for brightness
-to make sure the image has decent illumination, the auto brightness algorithm that will spread the histogram and clip it effectively increasing the uniform brightness of the image.
-after this the HLS color space was observed to produce better results in the S channel. 
+### Auto alpha and beta calculations for brightness
+to make sure the image has decent illumination, the auto brightness algorithm that will spread 
+the histogram and clip it effectively increasing the uniform brightness of the image.
+after this the HLS color space was observed to produce better results in the S-channel.  
+- The histogram correction (stretching) is done for 5% of the histogram.  
+- Orange histogram is of the corrected image. Blue histogram is that of the imput image.
 
-`autobrcrt(...)` implements the auto brightness algorithm. and here is an example result   
+`autobrcrt(...)` implements the auto brightness algorithm. and here is an example result  
+
+![lane lines](output_images/Autobrt.png)  
+
+### Sobel direction thresholding and salt and pepper noise removal
+A direction thresholding `(arctan(y/x))` implemented in `dir_thresh(...)` under `Transforms.py` was done and a median filter was implemented to remove salt and pepper noise from the resulting image.
+This was added to the Fusion output. theta = 1.558 to 2.0 yielded best results.
+
+        anglebin[((angle > 1.558) &(angle < 2.0))]=255
+
+### Correction to the existing ROI polygon and perspective transform destination points
+the camera position has changed/scaling has changed. hence, the polygons must be changed to get a better perspective transformation  
+
+    poly = np.array([[250, h], [w - 200, h], [(w / 2) + 100, h / 2 + 130], [(w / 2) - 30 , h / 2 + 130]],
+                    dtype=np.int32)
+
+destination points
+
+        dst = np.array([
+        [100, 0],
+        [maxWidth-150, 0],
+        [maxWidth-150, maxHeight],
+        [100, maxHeight]], dtype="float32")
+
+### Result
+With that, the resulting video `output_challenge_video.mp4` was generated and found to work fairly well given the conditions.
+
+
+### Discussion and Possible Improvements
+- Superior image processing concepts such as HOG(histogram of oriented gradients) could be used to mark the lanes better. this may deteriorate the performance as HOG processing takes quite some processing time. GPU acceleration could be still done using CUDA - `cv::cuda::HOG`. This is in C++ which is more closer to my wheelhouse and I haven't explored it's use in python yet. 
+- It would be evident if not, I am more from a signal/image processing background and I like using a lot of CV, image processing concepts. 
+  Machine learning is something that I resort to at the end when all else fails. 
+  In this case the large amount of filtering, regional processing on images will be so CPU/GPU intensive that its poor performance will outweigh its benefits.  
+  With that said, R-CNN(region based Convolution Neural Networks) could identify lane markings with better trade-off on performance. There are numerous papers on this.  
+  for example this:  https://www.sciencedirect.com/science/article/abs/pii/S0925231217317630  done on KITTI dataset.
+- Only challenge is, Machine learning algorithms are difficult to validate as most of its parts are non-deterministic by design.
+  As far as my knowledge goes, Autonomous driving is a safety critical application (possibly, ASIL-D for the SIL fanboys like me out there). This makes it a big challenge atleast in the country(Germany) where I live in.
+  

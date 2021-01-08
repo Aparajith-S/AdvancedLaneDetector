@@ -1,3 +1,8 @@
+# @file LaneDetector.py
+# @brief methods and classes to make the pipeline for working on frames
+# @author Aparajith Sridharan
+#         s.aparajith@live.com
+# @date 1.1.2021
 import numpy as np
 from Polyfit import finalPipeline,Line
 import cv2

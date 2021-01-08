@@ -1,3 +1,8 @@
+# @file Calibration.py
+# @brief methods to calibrate the camera and calculate the camera matrix and distortion coeffs
+# @author Aparajith Sridharan
+#         s.aparajith@live.com
+# @date 28.12.2020
 import cv2
 import numpy as np
 import glob
